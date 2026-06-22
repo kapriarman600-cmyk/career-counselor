@@ -1,0 +1,260 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  name          String
+  email         String    @unique
+  password      String
+  role          String    @default("STUDENT") // STUDENT, PARENT, MENTOR, ADMIN
+  eduCoins      Int       @default(0)
+  level         Int       @default(1)
+  
+  // Relations
+  profile       StudentProfile?
+  mentorProfile MentorProfile?
+  mockTests     MockTestAttempt[]
+  studyPlans    StudyPlan[]
+  transactions  CoinTransaction[]
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model StudentProfile {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  currentClass    String?  // Class 8, 9, 10, 11, 12, Graduate, etc.
+  targetExams     String?  // Comma-separated or JSON list of exam IDs
+  targetCareers   String?  // Comma-separated or JSON list of career IDs
+  skills          String?  // Comma-separated skills
+  learningStyle   String?
+  
+  // Gamification stats
+  studyStreak     Int      @default(0)
+  longestStreak   Int      @default(0)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model MentorProfile {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  name            String?
+  photo           String?
+  expertise       String?  // Comma-separated or JSON list
+  experienceYears Int      @default(0)
+  rating          Float    @default(0.0)
+  totalSessions   Int      @default(0)
+  hourlyRateCoins Int      @default(100)
+  education       String?
+  skills          String?
+  guidanceAreas   String?
+  availability    String?
+  bio             String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Exam {
+  id              String   @id @default(uuid())
+  name            String
+  category        String   // UPSC, SSC, Banking, Engineering...
+  description     String
+  eligibility     String
+  selectionProcess String
+  salary          String
+  difficultyLevel String   // Easy, Medium, Hard
+  successRate     Float?   // percentage
+  syllabus        String?
+  pattern         String?
+  previousYearCutoffs String?
+  recommendedBooks String?
+  preparationStrategy String?
+  resources       String?
+  
+  // Relations
+  previousPapers  PreviousPaper[]
+  mockTests       MockTest[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Career {
+  id              String   @id @default(uuid())
+  title           String
+  industry        String
+  description     String
+  demandLevel     String   // High, Medium, Low
+  averageSalary   String
+  futureScope     String
+  requiredSkills  String?  // Comma-separated list
+  overview        String?
+  eligibility     String?
+  topColleges     String?
+  entranceExams   String?
+  roadmap         String?
+  recommendedResources String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model College {
+  id              String   @id @default(uuid())
+  name            String
+  location        String
+  type            String   // Public, Private
+  ranking         Int?
+  accreditation   String?
+  description     String
+  avgPlacement    String?
+  highestPlacement String?
+  cutoffs         String?
+  admissionProcess String?
+  officialWebsite String?
+  reviews         String?
+  
+  // Relations
+  courses         Course[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Course {
+  id              String   @id @default(uuid())
+  collegeId       String
+  college         College  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  name            String
+  duration        String
+  fees            String
+  seats           Int?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model MockTest {
+  id              String   @id @default(uuid())
+  examId          String?
+  exam            Exam?    @relation(fields: [examId], references: [id], onDelete: SetNull)
+  title           String
+  type            String   // Full, Sectional, Topic
+  durationMinutes Int
+  totalQuestions  Int
+  totalMarks      Int
+  rewardCoins     Int      @default(0)
+  
+  attempts        MockTestAttempt[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model MockTestAttempt {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mockTestId      String
+  mockTest        MockTest @relation(fields: [mockTestId], references: [id], onDelete: Cascade)
+  
+  score           Float
+  timeTakenMins   Int
+  accuracy        Float
+  weakAreas       String?
+  
+  createdAt       DateTime @default(now())
+}
+
+model PreviousPaper {
+  id              String   @id @default(uuid())
+  examId          String
+  exam            Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+  year            Int
+  title           String
+  pdfUrl          String?
+  
+  createdAt       DateTime @default(now())
+}
+
+model StudyPlan {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  targetExamId    String
+  startDate       DateTime
+  endDate         DateTime
+  dailyHours      Int
+  
+  tasks           StudyTask[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model StudyTask {
+  id              String   @id @default(uuid())
+  planId          String
+  plan            StudyPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  title           String
+  date            DateTime
+  durationMins    Int
+  isCompleted     Boolean  @default(false)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model CoinTransaction {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount          Int
+  type            String   // EARNED, SPENT
+  source          String   // LOGIN, TEST, MENTORSHIP, etc.
+  description     String
+  
+  createdAt       DateTime @default(now())
+}
+
+model Habit {
+  id            String   @id @default(uuid())
+  userId        String
+  title         String
+  streak        Int      @default(0)
+  lastCompleted DateTime?
+  createdAt     DateTime @default(now())
+}
+
+model Goal {
+  id          String   @id @default(uuid())
+  userId      String
+  title       String
+  targetDate  DateTime
+  isCompleted Boolean  @default(false)
+  category    String   // EXAM, STUDY, CAREER
+  createdAt   DateTime @default(now())
+}
+
+model Reminder {
+  id          String   @id @default(uuid())
+  userId      String
+  title       String
+  dateTime    DateTime
+  isCompleted Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
