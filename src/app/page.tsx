@@ -20,7 +20,7 @@ export default function Home() {
               Get Started for Free <ArrowRight size={20} />
             </Link>
             <Link href="/counselor" className="btn-outline" style={{ padding: "1rem 2rem", fontSize: "1.1rem" }}>
-              <BrainCircuit size={20}/> Talk to AI Counselor
+              <BrainCircuit size={20} /> Talk to AI Counselor
             </Link>
           </div>
         </div>
@@ -34,7 +34,7 @@ export default function Home() {
           </div>
 
           <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "2rem" }}>
-            
+
             {/* Feature 1 */}
             <div className="glass-panel">
               <div style={{ background: "rgba(99, 102, 241, 0.1)", width: "60px", height: "60px", borderRadius: "15px", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "1.5rem" }}>
@@ -43,7 +43,7 @@ export default function Home() {
               <h3 style={{ fontSize: "1.5rem", marginBottom: "0.8rem" }}>AI Career Counseling</h3>
               <p className="text-secondary" style={{ marginBottom: "1.5rem" }}>Assess your interests, personality, and aptitude. Let our AI recommend careers, create roadmaps, and forecast your growth.</p>
               <Link href="/counselor" className="text-primary font-bold" style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
-                Try Assessment <ArrowRight size={16}/>
+                Try Assessment <ArrowRight size={16} />
               </Link>
             </div>
 
@@ -55,7 +55,7 @@ export default function Home() {
               <h3 style={{ fontSize: "1.5rem", marginBottom: "0.8rem" }}>150+ Exam Directory</h3>
               <p className="text-secondary" style={{ marginBottom: "1.5rem" }}>Detailed information on UPSC, JEE, NEET, SSC, and 150+ exams. Get cutoffs, syllabus, pyqs, and AI study planners.</p>
               <Link href="/exams" className="text-accent font-bold" style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
-                Explore Exams <ArrowRight size={16}/>
+                Explore Exams <ArrowRight size={16} />
               </Link>
             </div>
 
@@ -67,7 +67,7 @@ export default function Home() {
               <h3 style={{ fontSize: "1.5rem", marginBottom: "0.8rem" }}>College Discovery</h3>
               <p className="text-secondary" style={{ marginBottom: "1.5rem" }}>Search, compare, and predict colleges. Access placement data, reviews, and admission guidance for top institutions.</p>
               <Link href="/colleges" style={{ color: "var(--success)", fontWeight: "bold", display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
-                Find Colleges <ArrowRight size={16}/>
+                Find Colleges <ArrowRight size={16} />
               </Link>
             </div>
 
@@ -79,7 +79,7 @@ export default function Home() {
               <h3 style={{ fontSize: "1.5rem", marginBottom: "0.8rem" }}>Gamified Learning</h3>
               <p className="text-secondary" style={{ marginBottom: "1.5rem" }}>Earn EduCoins by studying, taking mock tests, and logging in. Redeem coins for premium courses and mentorship.</p>
               <Link href="/rewards" style={{ color: "var(--coin)", fontWeight: "bold", display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
-                View Rewards <ArrowRight size={16}/>
+                View Rewards <ArrowRight size={16} />
               </Link>
             </div>
 
@@ -91,7 +91,7 @@ export default function Home() {
               <h3 style={{ fontSize: "1.5rem", marginBottom: "0.8rem" }}>Mentorship</h3>
               <p className="text-secondary" style={{ marginBottom: "1.5rem" }}>Connect with industry experts, alumni, and toppers for 1-to-1 video sessions, resume reviews, and mock interviews.</p>
               <Link href="/mentorship" style={{ color: "var(--secondary)", fontWeight: "bold", display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
-                Find Mentors <ArrowRight size={16}/>
+                Find Mentors <ArrowRight size={16} />
               </Link>
             </div>
 
@@ -103,7 +103,7 @@ export default function Home() {
               <h3 style={{ fontSize: "1.5rem", marginBottom: "0.8rem" }}>Test Series & Analytics</h3>
               <p className="text-secondary" style={{ marginBottom: "1.5rem" }}>Take timed mock tests with AI evaluation. Get deep analytics on weak areas, rank prediction, and performance heatmaps.</p>
               <Link href="/tests" style={{ color: "#38bdf8", fontWeight: "bold", display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
-                Start Practicing <ArrowRight size={16}/>
+                Start Practicing <ArrowRight size={16} />
               </Link>
             </div>
 
@@ -116,25 +116,25 @@ export default function Home() {
         <div className="container">
           <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "2rem", textAlign: "center" }}>
             <div>
-              <div style={{ fontSize: "3.5rem", fontWeight: "800", fontFamily: "var(--font-outfit)", background: "linear-gradient(135deg, var(--primary), var(--secondary))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>150+</div>
+              <div style={{ fontSize: "3.5rem", fontWeight: "800", fontFamily: "var(--font-outfit)", background: "linear-gradient(135deg, var(--primary), var(--secondary))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>15+</div>
               <div className="text-secondary font-bold">Exams Covered</div>
             </div>
             <div>
-              <div style={{ fontSize: "3.5rem", fontWeight: "800", fontFamily: "var(--font-outfit)", background: "linear-gradient(135deg, var(--primary), var(--secondary))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>10K+</div>
+              <div style={{ fontSize: "3.5rem", fontWeight: "800", fontFamily: "var(--font-outfit)", background: "linear-gradient(135deg, var(--primary), var(--secondary))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>100+</div>
               <div className="text-secondary font-bold">Mock Tests</div>
             </div>
             <div>
-              <div style={{ fontSize: "3.5rem", fontWeight: "800", fontFamily: "var(--font-outfit)", background: "linear-gradient(135deg, var(--primary), var(--secondary))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>500+</div>
+              <div style={{ fontSize: "3.5rem", fontWeight: "800", fontFamily: "var(--font-outfit)", background: "linear-gradient(135deg, var(--primary), var(--secondary))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>50+</div>
               <div className="text-secondary font-bold">Expert Mentors</div>
             </div>
             <div>
-              <div style={{ fontSize: "3.5rem", fontWeight: "800", fontFamily: "var(--font-outfit)", background: "linear-gradient(135deg, var(--primary), var(--secondary))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>2M+</div>
+              <div style={{ fontSize: "3.5rem", fontWeight: "800", fontFamily: "var(--font-outfit)", background: "linear-gradient(135deg, var(--primary), var(--secondary))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>10k+</div>
               <div className="text-secondary font-bold">EduCoins Rewarded</div>
             </div>
           </div>
         </div>
       </section>
-      
+
     </div>
   );
 }

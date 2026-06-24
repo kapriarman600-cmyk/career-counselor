@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { 
-  Activity, BookOpen, Target, Trophy, Clock, TrendingUp, 
-  BarChart, LineChart, PieChart, Loader2, Sparkles, User 
+import {
+  Activity, BookOpen, Target, Trophy, Clock, TrendingUp,
+  BarChart, LineChart, PieChart, Loader2, Sparkles, User
 } from "lucide-react";
 
 type KPIStats = {
@@ -62,20 +62,22 @@ export default function AnalyticsDashboard() {
 
   const getDemoStats = (): StatsData => ({
     progressData: [
-      { label: "Mock 1", score: 185, accuracy: 78.5 },
-      { label: "Mock 2", score: 205, accuracy: 80.2 },
-      { label: "Mock 3", score: 215, accuracy: 82.0 },
-      { label: "Mock 4", score: 235, accuracy: 84.5 },
-      { label: "Mock 5", score: 255, accuracy: 86.8 }
+
+      { label: "Mock 1", score: 0, accuracy: 0 },
+      { label: "Mock 2", score: 0, accuracy: 0 },
+      { label: "Mock 3", score: 0, accuracy: 0 },
+      { label: "Mock 4", score: 0, accuracy: 0 },
+      { label: "Mock 5", score: 0, accuracy: 0 }
     ],
+
     studyHoursData: [
-      { day: "Mon", hours: 4.5 },
-      { day: "Tue", hours: 5.2 },
-      { day: "Wed", hours: 6.0 },
-      { day: "Thu", hours: 4.0 },
-      { day: "Fri", hours: 7.5 },
-      { day: "Sat", hours: 8.0 },
-      { day: "Sun", hours: 3.5 }
+      { day: "Mon", hours: 0.0 },
+      { day: "Tue", hours: 0.0 },
+      { day: "Wed", hours: 0.0 },
+      { day: "Thu", hours: 0.0 },
+      { day: "Fri", hours: 0.0 },
+      { day: "Sat", hours: 0.0 },
+      { day: "Sun", hours: 0. }
     ],
     appVsSelData: [
       { exam: "UPSC", applicants: 1000000, selections: 1056 },
@@ -122,16 +124,16 @@ export default function AnalyticsDashboard() {
       {/* Sidebar */}
       <div className="sidebar" style={{ display: "flex", flexDirection: "column" }}>
         <h3 style={{ padding: "0 1rem", marginBottom: "1rem", fontSize: "0.9rem", color: "var(--text-muted)", textTransform: "uppercase" }}>Analytics</h3>
-        <a href="#" className="sidebar-link active"><Activity size={18}/> Overview</a>
-        <Link href="/study-planner" className="sidebar-link"><BookOpen size={18}/> Syllabus Planner</Link>
-        <Link href="/exams" className="sidebar-link"><Target size={18}/> Exams Directory</Link>
-        <Link href="/colleges" className="sidebar-link"><Trophy size={18}/> College Discovery</Link>
-        <Link href="/careers" className="sidebar-link"><TrendingUp size={18}/> Careers Encyclopedia</Link>
+        <a href="#" className="sidebar-link active"><Activity size={18} /> Overview</a>
+        <Link href="/study-planner" className="sidebar-link"><BookOpen size={18} /> Syllabus Planner</Link>
+        <Link href="/exams" className="sidebar-link"><Target size={18} /> Exams Directory</Link>
+        <Link href="/colleges" className="sidebar-link"><Trophy size={18} /> College Discovery</Link>
+        <Link href="/careers" className="sidebar-link"><TrendingUp size={18} /> Careers Encyclopedia</Link>
       </div>
 
       {/* Main Content Area */}
       <div className="content-area" style={{ paddingBottom: "5rem" }}>
-        
+
         {/* Banner Alert for non-authenticated */}
         {!authenticated && (
           <div className="glass-panel" style={{ background: "rgba(99, 102, 241, 0.1)", border: "1px solid var(--primary)", padding: "1rem 1.5rem", borderRadius: "12px", marginBottom: "2rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -184,7 +186,7 @@ export default function AnalyticsDashboard() {
 
           {/* Row 1: User Progress Line Chart & Study Time Bar Chart */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(450px, 1fr))", gap: "2.5rem" }}>
-            
+
             {/* 1. User Progress SVG Line Chart */}
             <div className="glass-panel" style={{ minHeight: "350px", display: "flex", flexDirection: "column" }}>
               <div style={{ marginBottom: "1.5rem" }}>
@@ -226,13 +228,13 @@ export default function AnalyticsDashboard() {
                           <path d={pathD} fill="transparent" stroke="var(--primary)" strokeWidth="3" style={{ transition: "all 0.5s ease" }} />
                           {points.map((p, idx) => (
                             <g key={idx}>
-                              <circle 
-                                cx={p.x} 
-                                cy={p.y} 
-                                r={hoveredProgressIndex === idx ? 8 : 5} 
-                                fill="white" 
-                                stroke="var(--primary)" 
-                                strokeWidth="3" 
+                              <circle
+                                cx={p.x}
+                                cy={p.y}
+                                r={hoveredProgressIndex === idx ? 8 : 5}
+                                fill="white"
+                                stroke="var(--primary)"
+                                strokeWidth="3"
                                 style={{ cursor: "pointer", transition: "r 0.2s" }}
                                 onMouseEnter={() => setHoveredProgressIndex(idx)}
                                 onMouseLeave={() => setHoveredProgressIndex(null)}
@@ -250,9 +252,9 @@ export default function AnalyticsDashboard() {
 
                 {/* Tooltip Overlay */}
                 {hoveredProgressIndex !== null && stats && (
-                  <div style={{ 
-                    position: "absolute", top: "10px", left: "50%", transform: "translateX(-50%)", 
-                    background: "rgba(15, 23, 42, 0.95)", border: "1px solid var(--primary)", 
+                  <div style={{
+                    position: "absolute", top: "10px", left: "50%", transform: "translateX(-50%)",
+                    background: "rgba(15, 23, 42, 0.95)", border: "1px solid var(--primary)",
                     padding: "0.5rem 1rem", borderRadius: "8px", fontSize: "0.85rem", zIndex: 10
                   }}>
                     <strong style={{ color: "white" }}>{stats.progressData[hoveredProgressIndex].label}</strong>
@@ -291,7 +293,7 @@ export default function AnalyticsDashboard() {
 
                         return (
                           <g key={i}>
-                            <rect 
+                            <rect
                               x={x}
                               y={y}
                               width={barWidth}
@@ -302,7 +304,7 @@ export default function AnalyticsDashboard() {
                               onMouseEnter={() => setHoveredStudyIndex(i)}
                               onMouseLeave={() => setHoveredStudyIndex(null)}
                             />
-                            <text x={x} dx={barWidth/2} y="192" fill="var(--text-secondary)" fontSize="10" textAnchor="middle">
+                            <text x={x} dx={barWidth / 2} y="192" fill="var(--text-secondary)" fontSize="10" textAnchor="middle">
                               {d.day}
                             </text>
                           </g>
@@ -314,9 +316,9 @@ export default function AnalyticsDashboard() {
 
                 {/* Tooltip Overlay */}
                 {hoveredStudyIndex !== null && stats && (
-                  <div style={{ 
-                    position: "absolute", top: "10px", left: "50%", transform: "translateX(-50%)", 
-                    background: "rgba(15, 23, 42, 0.95)", border: "1px solid var(--accent)", 
+                  <div style={{
+                    position: "absolute", top: "10px", left: "50%", transform: "translateX(-50%)",
+                    background: "rgba(15, 23, 42, 0.95)", border: "1px solid var(--accent)",
                     padding: "0.5rem 1rem", borderRadius: "8px", fontSize: "0.85rem", zIndex: 10
                   }}>
                     <strong style={{ color: "white" }}>{stats.studyHoursData[hoveredStudyIndex].day}</strong>
@@ -330,7 +332,7 @@ export default function AnalyticsDashboard() {
 
           {/* Row 2: Applications vs Selections & Cutoff Trends */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(450px, 1fr))", gap: "2.5rem" }}>
-            
+
             {/* 3. Applications vs Selections Ratio Chart */}
             <div className="glass-panel" style={{ minHeight: "350px", display: "flex", flexDirection: "column" }}>
               <div style={{ marginBottom: "1.5rem" }}>
@@ -354,10 +356,10 @@ export default function AnalyticsDashboard() {
                         </span>
                       </div>
                       <div style={{ width: "100%", height: "10px", background: "rgba(255,255,255,0.05)", borderRadius: "5px", overflow: "hidden" }}>
-                        <div style={{ 
-                          width: `${fillWidth}%`, height: "100%", 
-                          background: "linear-gradient(to right, var(--primary), var(--secondary))", 
-                          borderRadius: "5px", transition: "width 1s ease" 
+                        <div style={{
+                          width: `${fillWidth}%`, height: "100%",
+                          background: "linear-gradient(to right, var(--primary), var(--secondary))",
+                          borderRadius: "5px", transition: "width 1s ease"
                         }}></div>
                       </div>
                     </div>
@@ -396,13 +398,13 @@ export default function AnalyticsDashboard() {
                           <path d={pathD} fill="transparent" stroke="var(--coin)" strokeWidth="3" />
                           {points.map((p, idx) => (
                             <g key={idx}>
-                              <circle 
-                                cx={p.x} 
-                                cy={p.y} 
-                                r={hoveredCutoffIndex === idx ? 7 : 4} 
-                                fill="white" 
-                                stroke="var(--coin)" 
-                                strokeWidth="3" 
+                              <circle
+                                cx={p.x}
+                                cy={p.y}
+                                r={hoveredCutoffIndex === idx ? 7 : 4}
+                                fill="white"
+                                stroke="var(--coin)"
+                                strokeWidth="3"
                                 style={{ cursor: "pointer", transition: "r 0.2s" }}
                                 onMouseEnter={() => setHoveredCutoffIndex(idx)}
                                 onMouseLeave={() => setHoveredCutoffIndex(null)}
@@ -420,9 +422,9 @@ export default function AnalyticsDashboard() {
 
                 {/* Tooltip Overlay */}
                 {hoveredCutoffIndex !== null && stats && (
-                  <div style={{ 
-                    position: "absolute", top: "10px", left: "50%", transform: "translateX(-50%)", 
-                    background: "rgba(15, 23, 42, 0.95)", border: "1px solid var(--coin)", 
+                  <div style={{
+                    position: "absolute", top: "10px", left: "50%", transform: "translateX(-50%)",
+                    background: "rgba(15, 23, 42, 0.95)", border: "1px solid var(--coin)",
                     padding: "0.5rem 1rem", borderRadius: "8px", fontSize: "0.85rem", zIndex: 10
                   }}>
                     <strong style={{ color: "white" }}>Year {stats.cutoffTrendsData[hoveredCutoffIndex].year}</strong>
@@ -463,21 +465,21 @@ export default function AnalyticsDashboard() {
 
                   {(() => {
                     const widthScale = 100 / (stats.careerGrowthData.length - 1);
-                    
+
                     const techPoints = stats.careerGrowthData.map((d, i) => ({
                       x: `${i * widthScale}%`,
                       y: 220 - ((d.tech / 60) * 160 + 20),
                       val: d.tech,
                       label: d.years
                     }));
-                    
+
                     const finPoints = stats.careerGrowthData.map((d, i) => ({
                       x: `${i * widthScale}%`,
                       y: 220 - ((d.finance / 60) * 160 + 20),
                       val: d.finance,
                       label: d.years
                     }));
-                    
+
                     const civPoints = stats.careerGrowthData.map((d, i) => ({
                       x: `${i * widthScale}%`,
                       y: 220 - ((d.civil / 60) * 160 + 20),
@@ -498,35 +500,35 @@ export default function AnalyticsDashboard() {
                         {stats.careerGrowthData.map((d, i) => (
                           <g key={i}>
                             {/* Hover interactive markers */}
-                            <circle 
-                              cx={techPoints[i].x} 
-                              cy={techPoints[i].y} 
-                              r={hoveredGrowthIndex === i ? 6 : 4} 
-                              fill="white" 
-                              stroke="var(--primary)" 
-                              strokeWidth="2" 
+                            <circle
+                              cx={techPoints[i].x}
+                              cy={techPoints[i].y}
+                              r={hoveredGrowthIndex === i ? 6 : 4}
+                              fill="white"
+                              stroke="var(--primary)"
+                              strokeWidth="2"
                               style={{ cursor: "pointer" }}
                               onMouseEnter={() => setHoveredGrowthIndex(i)}
                               onMouseLeave={() => setHoveredGrowthIndex(null)}
                             />
-                            <circle 
-                              cx={finPoints[i].x} 
-                              cy={finPoints[i].y} 
-                              r={hoveredGrowthIndex === i ? 6 : 4} 
-                              fill="white" 
-                              stroke="var(--success)" 
-                              strokeWidth="2" 
+                            <circle
+                              cx={finPoints[i].x}
+                              cy={finPoints[i].y}
+                              r={hoveredGrowthIndex === i ? 6 : 4}
+                              fill="white"
+                              stroke="var(--success)"
+                              strokeWidth="2"
                               style={{ cursor: "pointer" }}
                               onMouseEnter={() => setHoveredGrowthIndex(i)}
                               onMouseLeave={() => setHoveredGrowthIndex(null)}
                             />
-                            <circle 
-                              cx={civPoints[i].x} 
-                              cy={civPoints[i].y} 
-                              r={hoveredGrowthIndex === i ? 6 : 4} 
-                              fill="white" 
-                              stroke="var(--accent)" 
-                              strokeWidth="2" 
+                            <circle
+                              cx={civPoints[i].x}
+                              cy={civPoints[i].y}
+                              r={hoveredGrowthIndex === i ? 6 : 4}
+                              fill="white"
+                              stroke="var(--accent)"
+                              strokeWidth="2"
                               style={{ cursor: "pointer" }}
                               onMouseEnter={() => setHoveredGrowthIndex(i)}
                               onMouseLeave={() => setHoveredGrowthIndex(null)}
@@ -544,9 +546,9 @@ export default function AnalyticsDashboard() {
 
               {/* Tooltip Overlay */}
               {hoveredGrowthIndex !== null && stats && (
-                <div style={{ 
-                  position: "absolute", top: "10px", left: "50%", transform: "translateX(-50%)", 
-                  background: "rgba(15, 23, 42, 0.95)", border: "1px solid var(--primary)", 
+                <div style={{
+                  position: "absolute", top: "10px", left: "50%", transform: "translateX(-50%)",
+                  background: "rgba(15, 23, 42, 0.95)", border: "1px solid var(--primary)",
                   padding: "0.5rem 1rem", borderRadius: "8px", fontSize: "0.85rem", zIndex: 10
                 }}>
                   <strong style={{ color: "white" }}>Salary trajectory at {stats.careerGrowthData[hoveredGrowthIndex].years}</strong>
@@ -561,8 +563,9 @@ export default function AnalyticsDashboard() {
         </div>
 
       </div>
-      
-      <style dangerouslySetInnerHTML={{__html: `
+
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .animate-spin { animation: spin 1s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
       `}} />
