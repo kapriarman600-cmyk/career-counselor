@@ -61,15 +61,7 @@ export default function AnalyticsDashboard() {
   };
 
   const getDemoStats = (): StatsData => ({
-    progressData: [
-
-      { label: "Mock 1", score: 0, accuracy: 0 },
-      { label: "Mock 2", score: 0, accuracy: 0 },
-      { label: "Mock 3", score: 0, accuracy: 0 },
-      { label: "Mock 4", score: 0, accuracy: 0 },
-      { label: "Mock 5", score: 0, accuracy: 0 }
-    ],
-
+    progressData: [],
     studyHoursData: [
       { day: "Mon", hours: 0.0 },
       { day: "Tue", hours: 0.0 },
@@ -77,35 +69,17 @@ export default function AnalyticsDashboard() {
       { day: "Thu", hours: 0.0 },
       { day: "Fri", hours: 0.0 },
       { day: "Sat", hours: 0.0 },
-      { day: "Sun", hours: 0. }
+      { day: "Sun", hours: 0.0 }
     ],
-    appVsSelData: [
-      { exam: "UPSC", applicants: 1000000, selections: 1056 },
-      { exam: "JEE Adv", applicants: 250000, selections: 17385 },
-      { exam: "NEET UG", applicants: 2000000, selections: 109000 },
-      { exam: "CAT (IIM)", applicants: 250000, selections: 5500 },
-      { exam: "GATE", applicants: 700000, selections: 15000 }
-    ],
-    cutoffTrendsData: [
-      { year: "2020", score: 92.51 },
-      { year: "2021", score: 87.54 },
-      { year: "2022", score: 88.22 },
-      { year: "2023", score: 75.41 },
-      { year: "2024", score: 78.50 }
-    ],
-    careerGrowthData: [
-      { years: "1 Yr", tech: 7.5, finance: 6.5, civil: 8.5 },
-      { years: "3 Yrs", tech: 13.0, finance: 11.0, civil: 9.5 },
-      { years: "5 Yrs", tech: 22.0, finance: 18.0, civil: 12.0 },
-      { years: "8 Yrs", tech: 35.0, finance: 28.0, civil: 16.0 },
-      { years: "12 Yrs", tech: 55.0, finance: 45.0, civil: 24.0 }
-    ],
+    appVsSelData: [],
+    cutoffTrendsData: [],
+    careerGrowthData: [],
     kpis: {
-      totalMocks: 5,
-      avgScore: 220,
-      maxAccuracy: 86.8,
-      eduCoins: 2450,
-      level: 4
+      totalMocks: 0,
+      avgScore: 0,
+      maxAccuracy: 0,
+      eduCoins: 0,
+      level: 1
     }
   });
 
@@ -194,73 +168,85 @@ export default function AnalyticsDashboard() {
                 <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Displays increase in mock scores over successive attempts</p>
               </div>
 
-              <div style={{ flex: 1, position: "relative" }}>
-                {stats && (
-                  <svg width="100%" height="200" style={{ overflow: "visible" }}>
-                    <defs>
-                      <linearGradient id="lineGlow" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.4" />
-                        <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.0" />
-                      </linearGradient>
-                    </defs>
-
-                    {/* Guidelines */}
-                    <line x1="0" y1="30" x2="100%" y2="30" stroke="rgba(255,255,255,0.05)" strokeDasharray="4" />
-                    <line x1="0" y1="90" x2="100%" y2="90" stroke="rgba(255,255,255,0.05)" strokeDasharray="4" />
-                    <line x1="0" y1="150" x2="100%" y2="150" stroke="rgba(255,255,255,0.05)" strokeDasharray="4" />
-
-                    {/* Construct Line Path */}
-                    {(() => {
-                      const widthScale = 100 / (stats.progressData.length - 1);
-                      const points = stats.progressData.map((d, i) => {
-                        // Max score 300, scale to 0-200. Y axis is inverted.
-                        const x = `${i * widthScale}%`;
-                        const y = 200 - ((d.score / 300) * 160 + 20); // Keep pad 20
-                        return { x, y, val: d.score, label: d.label, accuracy: d.accuracy };
-                      });
-
-                      const pathD = `M ${points.map(p => `${p.x} ${p.y}`).join(" L ")}`;
-                      const areaD = `${pathD} L 100% 200 L 0% 200 Z`;
-
-                      return (
-                        <>
-                          <path d={areaD} fill="url(#lineGlow)" />
-                          <path d={pathD} fill="transparent" stroke="var(--primary)" strokeWidth="3" style={{ transition: "all 0.5s ease" }} />
-                          {points.map((p, idx) => (
-                            <g key={idx}>
-                              <circle
-                                cx={p.x}
-                                cy={p.y}
-                                r={hoveredProgressIndex === idx ? 8 : 5}
-                                fill="white"
-                                stroke="var(--primary)"
-                                strokeWidth="3"
-                                style={{ cursor: "pointer", transition: "r 0.2s" }}
-                                onMouseEnter={() => setHoveredProgressIndex(idx)}
-                                onMouseLeave={() => setHoveredProgressIndex(null)}
-                              />
-                              <text x={p.x} y="195" fill="var(--text-secondary)" fontSize="10" textAnchor="middle">
-                                {p.label}
-                              </text>
-                            </g>
-                          ))}
-                        </>
-                      );
-                    })()}
-                  </svg>
-                )}
-
-                {/* Tooltip Overlay */}
-                {hoveredProgressIndex !== null && stats && (
-                  <div style={{
-                    position: "absolute", top: "10px", left: "50%", transform: "translateX(-50%)",
-                    background: "rgba(15, 23, 42, 0.95)", border: "1px solid var(--primary)",
-                    padding: "0.5rem 1rem", borderRadius: "8px", fontSize: "0.85rem", zIndex: 10
-                  }}>
-                    <strong style={{ color: "white" }}>{stats.progressData[hoveredProgressIndex].label}</strong>
-                    <p style={{ margin: "2px 0 0" }}>Score: <span style={{ color: "var(--coin)", fontWeight: "bold" }}>{stats.progressData[hoveredProgressIndex].score}/300</span></p>
-                    <p style={{ margin: 0 }}>Accuracy: <span style={{ color: "var(--success)" }}>{stats.progressData[hoveredProgressIndex].accuracy}%</span></p>
+              <div style={{ flex: 1, position: "relative", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                {!stats || stats.progressData.length === 0 ? (
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "200px", color: "var(--text-secondary)", fontSize: "0.95rem", textAlign: "center", padding: "1rem" }}>
+                    <p style={{ margin: 0 }}>No mock score trends available yet.</p>
+                    <Link href="/exams" style={{ color: "var(--primary)", marginTop: "0.5rem", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: "0.2rem" }}>
+                      Complete your first mock test →
+                    </Link>
                   </div>
+                ) : (
+                  <>
+                    <svg width="100%" height="200" style={{ overflow: "visible" }}>
+                      <defs>
+                        <linearGradient id="lineGlow" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.4" />
+                          <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.0" />
+                        </linearGradient>
+                      </defs>
+
+                      {/* Guidelines */}
+                      <line x1="0" y1="30" x2="100%" y2="30" stroke="rgba(255,255,255,0.05)" strokeDasharray="4" />
+                      <line x1="0" y1="90" x2="100%" y2="90" stroke="rgba(255,255,255,0.05)" strokeDasharray="4" />
+                      <line x1="0" y1="150" x2="100%" y2="150" stroke="rgba(255,255,255,0.05)" strokeDasharray="4" />
+
+                      {/* Construct Line Path */}
+                      {(() => {
+                        const widthScale = stats.progressData.length > 1 ? 100 / (stats.progressData.length - 1) : 100;
+                        const points = stats.progressData.map((d, i) => {
+                          const x = stats.progressData.length > 1 ? `${i * widthScale}%` : "50%";
+                          const y = 200 - ((d.score / 300) * 160 + 20); // Keep pad 20
+                          return { x, y, val: d.score, label: d.label, accuracy: d.accuracy };
+                        });
+
+                        const pathD = stats.progressData.length > 1 
+                          ? `M ${points.map(p => `${p.x} ${p.y}`).join(" L ")}`
+                          : `M 0 ${points[0].y} L 100% ${points[0].y}`;
+                        const areaD = stats.progressData.length > 1
+                          ? `${pathD} L 100% 200 L 0% 200 Z`
+                          : `M 0 ${points[0].y} L 100% ${points[0].y} L 100% 200 L 0 200 Z`;
+
+                        return (
+                          <>
+                            <path d={areaD} fill="url(#lineGlow)" />
+                            <path d={pathD} fill="transparent" stroke="var(--primary)" strokeWidth="3" style={{ transition: "all 0.5s ease" }} />
+                            {points.map((p, idx) => (
+                              <g key={idx}>
+                                <circle
+                                  cx={p.x}
+                                  cy={p.y}
+                                  r={hoveredProgressIndex === idx ? 8 : 5}
+                                  fill="white"
+                                  stroke="var(--primary)"
+                                  strokeWidth="3"
+                                  style={{ cursor: "pointer", transition: "r 0.2s" }}
+                                  onMouseEnter={() => setHoveredProgressIndex(idx)}
+                                  onMouseLeave={() => setHoveredProgressIndex(null)}
+                                />
+                                <text x={p.x} y="195" fill="var(--text-secondary)" fontSize="10" textAnchor="middle">
+                                  {p.label}
+                                </text>
+                              </g>
+                            ))}
+                          </>
+                        );
+                      })()}
+                    </svg>
+
+                    {/* Tooltip Overlay */}
+                    {hoveredProgressIndex !== null && (
+                      <div style={{
+                        position: "absolute", top: "10px", left: "50%", transform: "translateX(-50%)",
+                        background: "rgba(15, 23, 42, 0.95)", border: "1px solid var(--primary)",
+                        padding: "0.5rem 1rem", borderRadius: "8px", fontSize: "0.85rem", zIndex: 10
+                      }}>
+                        <strong style={{ color: "white" }}>{stats.progressData[hoveredProgressIndex].label}</strong>
+                        <p style={{ margin: "2px 0 0" }}>Score: <span style={{ color: "var(--coin)", fontWeight: "bold" }}>{stats.progressData[hoveredProgressIndex].score}/300</span></p>
+                        <p style={{ margin: 0 }}>Accuracy: <span style={{ color: "var(--success)" }}>{stats.progressData[hoveredProgressIndex].accuracy}%</span></p>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -272,58 +258,66 @@ export default function AnalyticsDashboard() {
                 <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Track hours studied per day throughout the current week</p>
               </div>
 
-              <div style={{ flex: 1, position: "relative" }}>
-                {stats && (
-                  <svg width="100%" height="200" style={{ overflow: "visible" }}>
-                    {/* Gridlines */}
-                    <line x1="0" y1="50" x2="100%" y2="50" stroke="rgba(255,255,255,0.05)" />
-                    <line x1="0" y1="100" x2="100%" y2="100" stroke="rgba(255,255,255,0.05)" />
-                    <line x1="0" y1="150" x2="100%" y2="150" stroke="rgba(255,255,255,0.05)" />
-
-                    {(() => {
-                      const barWidth = 35;
-                      const length = stats.studyHoursData.length;
-                      const spacing = 100 / length;
-
-                      return stats.studyHoursData.map((d, i) => {
-                        // Max hours is 10, scale to 0-160px height.
-                        const barHeight = (d.hours / 10) * 150;
-                        const x = `${i * spacing + spacing / 3}%`;
-                        const y = 170 - barHeight;
-
-                        return (
-                          <g key={i}>
-                            <rect
-                              x={x}
-                              y={y}
-                              width={barWidth}
-                              height={barHeight}
-                              rx="6"
-                              fill={hoveredStudyIndex === i ? "var(--accent)" : "rgba(244, 63, 94, 0.75)"}
-                              style={{ cursor: "pointer", transition: "fill 0.2s" }}
-                              onMouseEnter={() => setHoveredStudyIndex(i)}
-                              onMouseLeave={() => setHoveredStudyIndex(null)}
-                            />
-                            <text x={x} dx={barWidth / 2} y="192" fill="var(--text-secondary)" fontSize="10" textAnchor="middle">
-                              {d.day}
-                            </text>
-                          </g>
-                        );
-                      });
-                    })()}
-                  </svg>
-                )}
-
-                {/* Tooltip Overlay */}
-                {hoveredStudyIndex !== null && stats && (
-                  <div style={{
-                    position: "absolute", top: "10px", left: "50%", transform: "translateX(-50%)",
-                    background: "rgba(15, 23, 42, 0.95)", border: "1px solid var(--accent)",
-                    padding: "0.5rem 1rem", borderRadius: "8px", fontSize: "0.85rem", zIndex: 10
-                  }}>
-                    <strong style={{ color: "white" }}>{stats.studyHoursData[hoveredStudyIndex].day}</strong>
-                    <p style={{ margin: "2px 0 0" }}>Study Time: <span style={{ color: "var(--accent)", fontWeight: "bold" }}>{stats.studyHoursData[hoveredStudyIndex].hours} Hours</span></p>
+              <div style={{ flex: 1, position: "relative", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                {!stats || !stats.studyHoursData.some(d => d.hours > 0) ? (
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "200px", color: "var(--text-secondary)", fontSize: "0.95rem", textAlign: "center", padding: "1rem" }}>
+                    <p style={{ margin: 0 }}>No study hours logged this week.</p>
+                    <Link href="/study-planner" style={{ color: "var(--accent)", marginTop: "0.5rem", fontWeight: 600 }}>
+                      Start your first study session →
+                    </Link>
                   </div>
+                ) : (
+                  <>
+                    <svg width="100%" height="200" style={{ overflow: "visible" }}>
+                      {/* Gridlines */}
+                      <line x1="0" y1="50" x2="100%" y2="50" stroke="rgba(255,255,255,0.05)" />
+                      <line x1="0" y1="100" x2="100%" y2="100" stroke="rgba(255,255,255,0.05)" />
+                      <line x1="0" y1="150" x2="100%" y2="150" stroke="rgba(255,255,255,0.05)" />
+
+                      {(() => {
+                        const barWidth = 35;
+                        const length = stats.studyHoursData.length;
+                        const spacing = 100 / length;
+
+                        return stats.studyHoursData.map((d, i) => {
+                          const barHeight = (d.hours / 10) * 150;
+                          const x = `${i * spacing + spacing / 3}%`;
+                          const y = 170 - barHeight;
+
+                          return (
+                            <g key={i}>
+                              <rect
+                                x={x}
+                                y={y}
+                                width={barWidth}
+                                height={barHeight}
+                                rx="6"
+                                fill={hoveredStudyIndex === i ? "var(--accent)" : "rgba(244, 63, 94, 0.75)"}
+                                style={{ cursor: "pointer", transition: "fill 0.2s" }}
+                                onMouseEnter={() => setHoveredStudyIndex(i)}
+                                onMouseLeave={() => setHoveredStudyIndex(null)}
+                              />
+                              <text x={x} dx={barWidth / 2} y="192" fill="var(--text-secondary)" fontSize="10" textAnchor="middle">
+                                {d.day}
+                              </text>
+                            </g>
+                          );
+                        });
+                      })()}
+                    </svg>
+
+                    {/* Tooltip Overlay */}
+                    {hoveredStudyIndex !== null && (
+                      <div style={{
+                        position: "absolute", top: "10px", left: "50%", transform: "translateX(-50%)",
+                        background: "rgba(15, 23, 42, 0.95)", border: "1px solid var(--accent)",
+                        padding: "0.5rem 1rem", borderRadius: "8px", fontSize: "0.85rem", zIndex: 10
+                      }}>
+                        <strong style={{ color: "white" }}>{stats.studyHoursData[hoveredStudyIndex].day}</strong>
+                        <p style={{ margin: "2px 0 0" }}>Study Time: <span style={{ color: "var(--accent)", fontWeight: "bold" }}>{stats.studyHoursData[hoveredStudyIndex].hours} Hours</span></p>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -331,9 +325,7 @@ export default function AnalyticsDashboard() {
           </div>
 
           {/* Row 2: Applications vs Selections & Cutoff Trends */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(450px, 1fr))", gap: "2.5rem" }}>
-
-            {/* 3. Applications vs Selections Ratio Chart */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(450px, 1fr))", gap: "2.5rem" }}            {/* 3. Applications vs Selections Ratio Chart */}
             <div className="glass-panel" style={{ minHeight: "350px", display: "flex", flexDirection: "column" }}>
               <div style={{ marginBottom: "1.5rem" }}>
                 <h3 style={{ fontSize: "1.2rem", color: "white" }}>Exam Success & Selection Ratios</h3>
@@ -341,98 +333,116 @@ export default function AnalyticsDashboard() {
               </div>
 
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "1rem", justifyContent: "center" }}>
-                {stats?.appVsSelData.map((d, idx) => {
-                  const percent = (d.selections / d.applicants) * 100;
-                  // Logarithmic scale for visualization (since UPSC selection rate is 0.1%, standard bars look empty)
-                  // Let's use a nice relative display bar
-                  const fillWidth = Math.max(2, Math.log10(d.selections) / Math.log10(d.applicants) * 100);
+                {!stats || stats.appVsSelData.length === 0 ? (
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "200px", color: "var(--text-secondary)", fontSize: "0.95rem", textAlign: "center", padding: "1rem" }}>
+                    <p style={{ margin: 0 }}>No target exams configured.</p>
+                    <Link href="/counselor" style={{ color: "var(--primary)", marginTop: "0.5rem", fontWeight: 600 }}>
+                      Select a target exam with AI Counselor →
+                    </Link>
+                  </div>
+                ) : (
+                  stats.appVsSelData.map((d, idx) => {
+                    const percent = (d.selections / d.applicants) * 100;
+                    const fillWidth = Math.max(2, Math.log10(d.selections) / Math.log10(d.applicants) * 100);
 
-                  return (
-                    <div key={idx} style={{ position: "relative" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", marginBottom: "0.3rem" }}>
-                        <span style={{ fontWeight: 600, color: "white" }}>{d.exam}</span>
-                        <span style={{ color: "var(--text-secondary)" }}>
-                          {d.selections.toLocaleString()} / {d.applicants.toLocaleString()} ({percent.toFixed(2)}% rate)
-                        </span>
+                    return (
+                      <div key={idx} style={{ position: "relative" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", marginBottom: "0.3rem" }}>
+                          <span style={{ fontWeight: 600, color: "white" }}>{d.exam}</span>
+                          <span style={{ color: "var(--text-secondary)" }}>
+                            {d.selections.toLocaleString()} / {d.applicants.toLocaleString()} ({percent.toFixed(2)}% rate)
+                          </span>
+                        </div>
+                        <div style={{ width: "100%", height: "10px", background: "rgba(255,255,255,0.05)", borderRadius: "5px", overflow: "hidden" }}>
+                          <div style={{
+                            width: `${fillWidth}%`, height: "100%",
+                            background: "linear-gradient(to right, var(--primary), var(--secondary))",
+                            borderRadius: "5px", transition: "width 1s ease"
+                          }}></div>
+                        </div>
                       </div>
-                      <div style={{ width: "100%", height: "10px", background: "rgba(255,255,255,0.05)", borderRadius: "5px", overflow: "hidden" }}>
-                        <div style={{
-                          width: `${fillWidth}%`, height: "100%",
-                          background: "linear-gradient(to right, var(--primary), var(--secondary))",
-                          borderRadius: "5px", transition: "width 1s ease"
-                        }}></div>
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
               </div>
             </div>
 
             {/* 4. Cutoff Trends Line Chart */}
             <div className="glass-panel" style={{ minHeight: "350px", display: "flex", flexDirection: "column" }}>
               <div style={{ marginBottom: "1.5rem" }}>
-                <h3 style={{ fontSize: "1.2rem", color: "white" }}>UPSC Prelims Cutoff Trends</h3>
-                <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Historical cutoff marks out of 200 (GS Paper 1)</p>
+                <h3 style={{ fontSize: "1.2rem", color: "white" }}>Target Exam Cutoff Trends</h3>
+                <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Historical cutoff marks over the last 5 years</p>
               </div>
 
-              <div style={{ flex: 1, position: "relative" }}>
-                {stats && (
-                  <svg width="100%" height="200" style={{ overflow: "visible" }}>
-                    <line x1="0" y1="40" x2="100%" y2="40" stroke="rgba(255,255,255,0.05)" />
-                    <line x1="0" y1="100" x2="100%" y2="100" stroke="rgba(255,255,255,0.05)" />
-                    <line x1="0" y1="160" x2="100%" y2="160" stroke="rgba(255,255,255,0.05)" />
-
-                    {(() => {
-                      const widthScale = 100 / (stats.cutoffTrendsData.length - 1);
-                      const points = stats.cutoffTrendsData.map((d, i) => {
-                        // Max cutoff scale is 120, scale to 0-160px height.
-                        const x = `${i * widthScale}%`;
-                        const y = 200 - ((d.score / 120) * 150 + 10);
-                        return { x, y, score: d.score, year: d.year };
-                      });
-
-                      const pathD = `M ${points.map(p => `${p.x} ${p.y}`).join(" L ")}`;
-
-                      return (
-                        <>
-                          <path d={pathD} fill="transparent" stroke="var(--coin)" strokeWidth="3" />
-                          {points.map((p, idx) => (
-                            <g key={idx}>
-                              <circle
-                                cx={p.x}
-                                cy={p.y}
-                                r={hoveredCutoffIndex === idx ? 7 : 4}
-                                fill="white"
-                                stroke="var(--coin)"
-                                strokeWidth="3"
-                                style={{ cursor: "pointer", transition: "r 0.2s" }}
-                                onMouseEnter={() => setHoveredCutoffIndex(idx)}
-                                onMouseLeave={() => setHoveredCutoffIndex(null)}
-                              />
-                              <text x={p.x} y="195" fill="var(--text-secondary)" fontSize="10" textAnchor="middle">
-                                {p.year}
-                              </text>
-                            </g>
-                          ))}
-                        </>
-                      );
-                    })()}
-                  </svg>
-                )}
-
-                {/* Tooltip Overlay */}
-                {hoveredCutoffIndex !== null && stats && (
-                  <div style={{
-                    position: "absolute", top: "10px", left: "50%", transform: "translateX(-50%)",
-                    background: "rgba(15, 23, 42, 0.95)", border: "1px solid var(--coin)",
-                    padding: "0.5rem 1rem", borderRadius: "8px", fontSize: "0.85rem", zIndex: 10
-                  }}>
-                    <strong style={{ color: "white" }}>Year {stats.cutoffTrendsData[hoveredCutoffIndex].year}</strong>
-                    <p style={{ margin: "2px 0 0" }}>Cutoff: <span style={{ color: "var(--coin)", fontWeight: "bold" }}>{stats.cutoffTrendsData[hoveredCutoffIndex].score} Marks</span></p>
+              <div style={{ flex: 1, position: "relative", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                {!stats || stats.cutoffTrendsData.length === 0 ? (
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "200px", color: "var(--text-secondary)", fontSize: "0.95rem", textAlign: "center", padding: "1rem" }}>
+                    <p style={{ margin: 0 }}>No cutoff trends available for target exams.</p>
+                    <Link href="/exams" style={{ color: "var(--coin)", marginTop: "0.5rem", fontWeight: 600 }}>
+                      Explore exams directory →
+                    </Link>
                   </div>
+                ) : (
+                  <>
+                    <svg width="100%" height="200" style={{ overflow: "visible" }}>
+                      <line x1="0" y1="40" x2="100%" y2="40" stroke="rgba(255,255,255,0.05)" />
+                      <line x1="0" y1="100" x2="100%" y2="100" stroke="rgba(255,255,255,0.05)" />
+                      <line x1="0" y1="160" x2="100%" y2="160" stroke="rgba(255,255,255,0.05)" />
+
+                      {(() => {
+                        const widthScale = stats.cutoffTrendsData.length > 1 ? 100 / (stats.cutoffTrendsData.length - 1) : 100;
+                        const maxVal = Math.max(...stats.cutoffTrendsData.map(d => d.score), 100);
+                        const points = stats.cutoffTrendsData.map((d, i) => {
+                          const x = stats.cutoffTrendsData.length > 1 ? `${i * widthScale}%` : "50%";
+                          const y = 200 - ((d.score / maxVal) * 150 + 10);
+                          return { x, y, score: d.score, year: d.year };
+                        });
+
+                        const pathD = stats.cutoffTrendsData.length > 1 
+                          ? `M ${points.map(p => `${p.x} ${p.y}`).join(" L ")}`
+                          : `M 0 ${points[0].y} L 100% ${points[0].y}`;
+
+                        return (
+                          <>
+                            <path d={pathD} fill="transparent" stroke="var(--coin)" strokeWidth="3" />
+                            {points.map((p, idx) => (
+                              <g key={idx}>
+                                <circle
+                                  cx={p.x}
+                                  cy={p.y}
+                                  r={hoveredCutoffIndex === idx ? 7 : 4}
+                                  fill="white"
+                                  stroke="var(--coin)"
+                                  strokeWidth="3"
+                                  style={{ cursor: "pointer", transition: "r 0.2s" }}
+                                  onMouseEnter={() => setHoveredCutoffIndex(idx)}
+                                  onMouseLeave={() => setHoveredCutoffIndex(null)}
+                                />
+                                <text x={p.x} y="195" fill="var(--text-secondary)" fontSize="10" textAnchor="middle">
+                                  {p.year}
+                                </text>
+                              </g>
+                            ))}
+                          </>
+                        );
+                      })()}
+                    </svg>
+
+                    {/* Tooltip Overlay */}
+                    {hoveredCutoffIndex !== null && (
+                      <div style={{
+                        position: "absolute", top: "10px", left: "50%", transform: "translateX(-50%)",
+                        background: "rgba(15, 23, 42, 0.95)", border: "1px solid var(--coin)",
+                        padding: "0.5rem 1rem", borderRadius: "8px", fontSize: "0.85rem", zIndex: 10
+                      }}>
+                        <strong style={{ color: "white" }}>Year {stats.cutoffTrendsData[hoveredCutoffIndex].year}</strong>
+                        <p style={{ margin: "2px 0 0" }}>Cutoff: <span style={{ color: "var(--coin)", fontWeight: "bold" }}>{stats.cutoffTrendsData[hoveredCutoffIndex].score} Marks</span></p>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
-            </div>
+            </div>iv>
 
           </div>
 
@@ -443,119 +453,127 @@ export default function AnalyticsDashboard() {
               <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Compares average salary trajectories over 12 years of experience</p>
             </div>
 
-            <div style={{ flex: 1, position: "relative" }}>
-              <div style={{ display: "flex", gap: "1.5rem", marginBottom: "1rem", fontSize: "0.85rem" }}>
-                <span style={{ display: "flex", alignItems: "center", gap: "0.4rem", color: "white" }}>
-                  <span style={{ width: "12px", height: "4px", background: "var(--primary)", borderRadius: "2px" }}></span> Tech Industry
-                </span>
-                <span style={{ display: "flex", alignItems: "center", gap: "0.4rem", color: "white" }}>
-                  <span style={{ width: "12px", height: "4px", background: "var(--success)", borderRadius: "2px" }}></span> Corporate Finance
-                </span>
-                <span style={{ display: "flex", alignItems: "center", gap: "0.4rem", color: "white" }}>
-                  <span style={{ width: "12px", height: "4px", background: "var(--accent)", borderRadius: "2px" }}></span> Civil Administration
-                </span>
-              </div>
-
-              {stats && (
-                <svg width="100%" height="220" style={{ overflow: "visible" }}>
-                  {/* Gridlines */}
-                  <line x1="0" y1="40" x2="100%" y2="40" stroke="rgba(255,255,255,0.05)" />
-                  <line x1="0" y1="100" x2="100%" y2="100" stroke="rgba(255,255,255,0.05)" />
-                  <line x1="0" y1="160" x2="100%" y2="160" stroke="rgba(255,255,255,0.05)" />
-
-                  {(() => {
-                    const widthScale = 100 / (stats.careerGrowthData.length - 1);
-
-                    const techPoints = stats.careerGrowthData.map((d, i) => ({
-                      x: `${i * widthScale}%`,
-                      y: 220 - ((d.tech / 60) * 160 + 20),
-                      val: d.tech,
-                      label: d.years
-                    }));
-
-                    const finPoints = stats.careerGrowthData.map((d, i) => ({
-                      x: `${i * widthScale}%`,
-                      y: 220 - ((d.finance / 60) * 160 + 20),
-                      val: d.finance,
-                      label: d.years
-                    }));
-
-                    const civPoints = stats.careerGrowthData.map((d, i) => ({
-                      x: `${i * widthScale}%`,
-                      y: 220 - ((d.civil / 60) * 160 + 20),
-                      val: d.civil,
-                      label: d.years
-                    }));
-
-                    const techD = `M ${techPoints.map(p => `${p.x} ${p.y}`).join(" L ")}`;
-                    const finD = `M ${finPoints.map(p => `${p.x} ${p.y}`).join(" L ")}`;
-                    const civD = `M ${civPoints.map(p => `${p.x} ${p.y}`).join(" L ")}`;
-
-                    return (
-                      <>
-                        <path d={techD} fill="transparent" stroke="var(--primary)" strokeWidth="3" />
-                        <path d={finD} fill="transparent" stroke="var(--success)" strokeWidth="3" />
-                        <path d={civD} fill="transparent" stroke="var(--accent)" strokeWidth="3" />
-
-                        {stats.careerGrowthData.map((d, i) => (
-                          <g key={i}>
-                            {/* Hover interactive markers */}
-                            <circle
-                              cx={techPoints[i].x}
-                              cy={techPoints[i].y}
-                              r={hoveredGrowthIndex === i ? 6 : 4}
-                              fill="white"
-                              stroke="var(--primary)"
-                              strokeWidth="2"
-                              style={{ cursor: "pointer" }}
-                              onMouseEnter={() => setHoveredGrowthIndex(i)}
-                              onMouseLeave={() => setHoveredGrowthIndex(null)}
-                            />
-                            <circle
-                              cx={finPoints[i].x}
-                              cy={finPoints[i].y}
-                              r={hoveredGrowthIndex === i ? 6 : 4}
-                              fill="white"
-                              stroke="var(--success)"
-                              strokeWidth="2"
-                              style={{ cursor: "pointer" }}
-                              onMouseEnter={() => setHoveredGrowthIndex(i)}
-                              onMouseLeave={() => setHoveredGrowthIndex(null)}
-                            />
-                            <circle
-                              cx={civPoints[i].x}
-                              cy={civPoints[i].y}
-                              r={hoveredGrowthIndex === i ? 6 : 4}
-                              fill="white"
-                              stroke="var(--accent)"
-                              strokeWidth="2"
-                              style={{ cursor: "pointer" }}
-                              onMouseEnter={() => setHoveredGrowthIndex(i)}
-                              onMouseLeave={() => setHoveredGrowthIndex(null)}
-                            />
-                            <text x={techPoints[i].x} y="215" fill="var(--text-secondary)" fontSize="10" textAnchor="middle">
-                              {d.years}
-                            </text>
-                          </g>
-                        ))}
-                      </>
-                    );
-                  })()}
-                </svg>
-              )}
-
-              {/* Tooltip Overlay */}
-              {hoveredGrowthIndex !== null && stats && (
-                <div style={{
-                  position: "absolute", top: "10px", left: "50%", transform: "translateX(-50%)",
-                  background: "rgba(15, 23, 42, 0.95)", border: "1px solid var(--primary)",
-                  padding: "0.5rem 1rem", borderRadius: "8px", fontSize: "0.85rem", zIndex: 10
-                }}>
-                  <strong style={{ color: "white" }}>Salary trajectory at {stats.careerGrowthData[hoveredGrowthIndex].years}</strong>
-                  <p style={{ margin: "2px 0 0" }}>Tech: <span style={{ color: "var(--primary)", fontWeight: "bold" }}>₹{stats.careerGrowthData[hoveredGrowthIndex].tech} LPA</span></p>
-                  <p style={{ margin: 0 }}>Finance: <span style={{ color: "var(--success)", fontWeight: "bold" }}>₹{stats.careerGrowthData[hoveredGrowthIndex].finance} LPA</span></p>
-                  <p style={{ margin: 0 }}>Civil: <span style={{ color: "var(--accent)", fontWeight: "bold" }}>₹{stats.careerGrowthData[hoveredGrowthIndex].civil} LPA</span></p>
+            <div style={{ flex: 1, position: "relative", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+              {!stats || stats.careerGrowthData.length === 0 ? (
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "220px", color: "var(--text-secondary)", fontSize: "0.95rem", textAlign: "center", padding: "1rem" }}>
+                  <p style={{ margin: 0 }}>No target careers configured in your profile.</p>
+                  <Link href="/counselor" style={{ color: "var(--primary)", marginTop: "0.5rem", fontWeight: 600 }}>
+                    Consult the AI Counselor to select target careers →
+                  </Link>
                 </div>
+              ) : (
+                <>
+                  <div style={{ display: "flex", gap: "1.5rem", marginBottom: "1rem", fontSize: "0.85rem" }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: "0.4rem", color: "white" }}>
+                      <span style={{ width: "12px", height: "4px", background: "var(--primary)", borderRadius: "2px" }}></span> Tech Industry
+                    </span>
+                    <span style={{ display: "flex", alignItems: "center", gap: "0.4rem", color: "white" }}>
+                      <span style={{ width: "12px", height: "4px", background: "var(--success)", borderRadius: "2px" }}></span> Corporate Finance
+                    </span>
+                    <span style={{ display: "flex", alignItems: "center", gap: "0.4rem", color: "white" }}>
+                      <span style={{ width: "12px", height: "4px", background: "var(--accent)", borderRadius: "2px" }}></span> Civil Administration
+                    </span>
+                  </div>
+
+                  <svg width="100%" height="220" style={{ overflow: "visible" }}>
+                    {/* Gridlines */}
+                    <line x1="0" y1="40" x2="100%" y2="40" stroke="rgba(255,255,255,0.05)" />
+                    <line x1="0" y1="100" x2="100%" y2="100" stroke="rgba(255,255,255,0.05)" />
+                    <line x1="0" y1="160" x2="100%" y2="160" stroke="rgba(255,255,255,0.05)" />
+
+                    {(() => {
+                      const widthScale = stats.careerGrowthData.length > 1 ? 100 / (stats.careerGrowthData.length - 1) : 100;
+
+                      const techPoints = stats.careerGrowthData.map((d, i) => ({
+                        x: `${i * widthScale}%`,
+                        y: 220 - ((d.tech / 60) * 160 + 20),
+                        val: d.tech,
+                        label: d.years
+                      }));
+
+                      const finPoints = stats.careerGrowthData.map((d, i) => ({
+                        x: `${i * widthScale}%`,
+                        y: 220 - ((d.finance / 60) * 160 + 20),
+                        val: d.finance,
+                        label: d.years
+                      }));
+
+                      const civPoints = stats.careerGrowthData.map((d, i) => ({
+                        x: `${i * widthScale}%`,
+                        y: 220 - ((d.civil / 60) * 160 + 20),
+                        val: d.civil,
+                        label: d.years
+                      }));
+
+                      const techD = `M ${techPoints.map(p => `${p.x} ${p.y}`).join(" L ")}`;
+                      const finD = `M ${finPoints.map(p => `${p.x} ${p.y}`).join(" L ")}`;
+                      const civD = `M ${civPoints.map(p => `${p.x} ${p.y}`).join(" L ")}`;
+
+                      return (
+                        <>
+                          <path d={techD} fill="transparent" stroke="var(--primary)" strokeWidth="3" />
+                          <path d={finD} fill="transparent" stroke="var(--success)" strokeWidth="3" />
+                          <path d={civD} fill="transparent" stroke="var(--accent)" strokeWidth="3" />
+
+                          {stats.careerGrowthData.map((d, i) => (
+                            <g key={i}>
+                              <circle
+                                cx={techPoints[i].x}
+                                cy={techPoints[i].y}
+                                r={hoveredGrowthIndex === i ? 6 : 4}
+                                fill="white"
+                                stroke="var(--primary)"
+                                strokeWidth="2"
+                                style={{ cursor: "pointer" }}
+                                onMouseEnter={() => setHoveredGrowthIndex(i)}
+                                onMouseLeave={() => setHoveredGrowthIndex(null)}
+                              />
+                              <circle
+                                cx={finPoints[i].x}
+                                cy={finPoints[i].y}
+                                r={hoveredGrowthIndex === i ? 6 : 4}
+                                fill="white"
+                                stroke="var(--success)"
+                                strokeWidth="2"
+                                style={{ cursor: "pointer" }}
+                                onMouseEnter={() => setHoveredGrowthIndex(i)}
+                                onMouseLeave={() => setHoveredGrowthIndex(null)}
+                              />
+                              <circle
+                                cx={civPoints[i].x}
+                                cy={civPoints[i].y}
+                                r={hoveredGrowthIndex === i ? 6 : 4}
+                                fill="white"
+                                stroke="var(--accent)"
+                                strokeWidth="2"
+                                style={{ cursor: "pointer" }}
+                                onMouseEnter={() => setHoveredGrowthIndex(i)}
+                                onMouseLeave={() => setHoveredGrowthIndex(null)}
+                              />
+                              <text x={techPoints[i].x} y="215" fill="var(--text-secondary)" fontSize="10" textAnchor="middle">
+                                {d.years}
+                              </text>
+                            </g>
+                          ))}
+                        </>
+                      );
+                    })()}
+                  </svg>
+
+                  {/* Tooltip Overlay */}
+                  {hoveredGrowthIndex !== null && (
+                    <div style={{
+                      position: "absolute", top: "10px", left: "50%", transform: "translateX(-50%)",
+                      background: "rgba(15, 23, 42, 0.95)", border: "1px solid var(--primary)",
+                      padding: "0.5rem 1rem", borderRadius: "8px", fontSize: "0.85rem", zIndex: 10
+                    }}>
+                      <strong style={{ color: "white" }}>Salary trajectory at {stats.careerGrowthData[hoveredGrowthIndex].years}</strong>
+                      <p style={{ margin: "2px 0 0" }}>Tech: <span style={{ color: "var(--primary)", fontWeight: "bold" }}>₹{stats.careerGrowthData[hoveredGrowthIndex].tech} LPA</span></p>
+                      <p style={{ margin: 0 }}>Finance: <span style={{ color: "var(--success)", fontWeight: "bold" }}>₹{stats.careerGrowthData[hoveredGrowthIndex].finance} LPA</span></p>
+                      <p style={{ margin: 0 }}>Civil: <span style={{ color: "var(--accent)", fontWeight: "bold" }}>₹{stats.careerGrowthData[hoveredGrowthIndex].civil} LPA</span></p>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -569,6 +587,6 @@ export default function AnalyticsDashboard() {
         .animate-spin { animation: spin 1s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
       `}} />
-    </div>
+    </div >
   );
 }
