@@ -23,6 +23,7 @@ model User {
   mockTests     MockTestAttempt[]
   studyPlans    StudyPlan[]
   transactions  CoinTransaction[]
+  chatMessages  ChatMessage[]
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -34,10 +35,16 @@ model StudentProfile {
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   currentClass    String?  // Class 8, 9, 10, 11, 12, Graduate, etc.
+  stream          String?  // Science, Commerce, Arts, etc.
   targetExams     String?  // Comma-separated or JSON list of exam IDs
   targetCareers   String?  // Comma-separated or JSON list of career IDs
   skills          String?  // Comma-separated skills
   learningStyle   String?
+  interests       String?
+  strengths       String?
+  weaknesses      String?
+  preferredLanguage String?
+  educationHistory  String?
   
   // Gamification stats
   studyStreak     Int      @default(0)
@@ -258,4 +265,13 @@ model Reminder {
   dateTime    DateTime
   isCompleted Boolean  @default(false)
   createdAt   DateTime @default(now())
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String   // "user" or "ai"
+  content   String
+  createdAt DateTime @default(now())
 }

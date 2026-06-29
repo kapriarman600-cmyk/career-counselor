@@ -1,5 +1,49 @@
 import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/db';
+import { cookies } from 'next/headers';
 
+// Helper to sanitize and clean markdown JSON wrapping
+function cleanJsonString(str: string): string {
+  let cleaned = str.trim();
+  if (cleaned.startsWith("```json")) {
+    cleaned = cleaned.substring(7);
+  } else if (cleaned.startsWith("```")) {
+    cleaned = cleaned.substring(3);
+  }
+  if (cleaned.endsWith("```")) {
+    cleaned = cleaned.substring(0, cleaned.length - 3);
+  }
+  return cleaned.trim();
+}
+
+// GET handler to fetch previous chat history
+export async function GET() {
+  try {
+    const cookieStore = await cookies();
+    const sessionUserId = cookieStore.get('session_user_id')?.value;
+
+    if (!sessionUserId) {
+      return NextResponse.json({ messages: [] }, { status: 200 });
+    }
+
+    const dbMessages = await prisma.chatMessage.findMany({
+      where: { userId: sessionUserId },
+      orderBy: { createdAt: 'asc' }
+    });
+
+    return NextResponse.json({
+      messages: dbMessages.map(m => ({
+        role: m.role,
+        content: m.content
+      }))
+    }, { status: 200 });
+  } catch (error: any) {
+    console.error('GET chat history error:', error);
+    return NextResponse.json({ error: 'Internal server error', details: error.message }, { status: 500 });
+  }
+}
+
+// POST handler to chat with personalization
 export async function POST(request: Request) {
   try {
     const { messages } = await request.json();
@@ -8,13 +52,181 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid message format' }, { status: 400 });
     }
 
+    const cookieStore = await cookies();
+    const sessionUserId = cookieStore.get('session_user_id')?.value;
+
+    let user = null;
+    let isGuest = true;
+
+    // Retrieve authenticated user
+    if (sessionUserId) {
+      user = await prisma.user.findUnique({
+        where: { id: sessionUserId },
+        include: {
+          profile: true,
+          mockTests: {
+            orderBy: { createdAt: 'asc' }
+          },
+          studyPlans: {
+            include: {
+              tasks: true
+            }
+          }
+        }
+      });
+      if (user) {
+        isGuest = false;
+      }
+    }
+
+    // Fallback to default student if not logged in
+    if (!user) {
+      user = await prisma.user.findUnique({
+        where: { email: 'student@example.com' },
+        include: {
+          profile: true,
+          mockTests: {
+            orderBy: { createdAt: 'asc' }
+          },
+          studyPlans: {
+            include: {
+              tasks: true
+            }
+          }
+        }
+      });
+    }
+
+    // Ensure user has a profile record
+    let profile = user?.profile;
+    if (user && !profile) {
+      profile = await prisma.studentProfile.create({
+        data: {
+          userId: user.id,
+          currentClass: 'Class 12',
+          studyStreak: 0,
+          longestStreak: 0
+        }
+      });
+    }
+
+    // Save user's message to the database if logged in
     const lastUserMessage = messages[messages.length - 1]?.content || "";
+    if (!isGuest && user) {
+      await prisma.chatMessage.create({
+        data: {
+          userId: user.id,
+          role: 'user',
+          content: lastUserMessage
+        }
+      });
+    }
+
+    // Compile Mock Test Attempts summary
+    let mockTestsSummary = "No mock tests attempted yet. Encourage the student to take mock tests in the practice tab to unlock insights.";
+    if (user && user.mockTests.length > 0) {
+      const totalScore = user.mockTests.reduce((acc, test) => acc + test.score, 0);
+      const avgScore = Math.round(totalScore / user.mockTests.length);
+      const avgAccuracy = (user.mockTests.reduce((acc, test) => acc + test.accuracy, 0) / user.mockTests.length).toFixed(1);
+
+      mockTestsSummary = `The student has taken ${user.mockTests.length} mock test(s).
+- Average score: ${avgScore}/300
+- Average accuracy: ${avgAccuracy}%
+Attempts:
+` + user.mockTests.map((t, i) => `  ${i + 1}. Title: "${t.mockTestId}" - Score: ${t.score}, Accuracy: ${t.accuracy}%, Time Taken: ${t.timeTakenMins}m, Weak Areas: ${t.weakAreas || 'None specified'}`).join('\n');
+    }
+
+    // Compile Study Plans & checklist progress summary
+    let studyPlansSummary = "No active study plans configured. Suggest creating one in the Syllabus Planner.";
+    if (user && user.studyPlans.length > 0) {
+      studyPlansSummary = user.studyPlans.map((plan, i) => {
+        const totalTasks = plan.tasks.length;
+        const completedTasks = plan.tasks.filter(t => t.isCompleted).length;
+        const percent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+        return `Plan ${i + 1}: Target Exam ID "${plan.targetExamId}"
+- Daily study target: ${plan.dailyHours} hours
+- Progress: ${completedTasks}/${totalTasks} tasks completed (${percent}%)`;
+      }).join('\n');
+    }
+
+    // Determine missing fields in StudentProfile
+    const missingFields = [];
+    if (!profile?.currentClass) missingFields.push("class/year");
+    if (!profile?.stream) missingFields.push("stream");
+    if (!profile?.targetCareers) missingFields.push("target career");
+    if (!profile?.targetExams) missingFields.push("target exam");
+    if (!profile?.interests) missingFields.push("interests");
+    if (!profile?.strengths) missingFields.push("strengths");
+    if (!profile?.weaknesses) missingFields.push("weaknesses");
+    if (!profile?.preferredLanguage) missingFields.push("preferred language");
+    if (!profile?.educationHistory) missingFields.push("education history");
+
+    const missingFieldsPrompt = missingFields.length > 0
+      ? `The following profile information is currently missing: [${missingFields.join(', ')}].
+If relevant, ask conversational follow-up questions to gather these details one by one (don't ask for all at once).`
+      : "The student's profile is complete.";
+
+    // Build personalization system prompt
+    const studentProfileBlock = `
+=== STUDENT CONTEXT ===
+- Name: ${user?.name || 'Student'}
+- Class/Year: ${profile?.currentClass || 'Not specified'}
+- Stream: ${profile?.stream || 'Not specified'}
+- Target Career(s): ${profile?.targetCareers || 'Not specified'}
+- Target Exam(s): ${profile?.targetExams || 'Not specified'}
+- Skills: ${profile?.skills || 'Not specified'}
+- Learning Style: ${profile?.learningStyle || 'Not specified'}
+- Interests: ${profile?.interests || 'Not specified'}
+- Strengths: ${profile?.strengths || 'Not specified'}
+- Weaknesses: ${profile?.weaknesses || 'Not specified'}
+- Preferred Language: ${profile?.preferredLanguage || 'Not specified'}
+- Education History: ${profile?.educationHistory || 'Not specified'}
+- Level: ${user?.level || 1}
+- EduCoins Balance: ${user?.eduCoins || 0}
+- Study Streak: ${profile?.studyStreak || 0} days (Longest: ${profile?.longestStreak || 0} days)
+
+=== MOCK TEST METRICS ===
+${mockTestsSummary}
+
+=== STUDY PLAN & SYLLABUS PROGRESS ===
+${studyPlansSummary}
+`;
+
+    const systemPrompt = `You are a professional, empathetic, and highly knowledgeable AI Career Counselor named PathFinder. Your goal is to guide students through their career and academic journeys inside the 'CareerVerse AI' ecosystem.
+
+Instead of generic guidance, you MUST use the student's profile and preparation metrics provided below to tailor your advice.
+If the student asks in their preferred language (or specifies one), respond in that language.
+
+${studentProfileBlock}
+
+${missingFieldsPrompt}
+${isGuest ? "\nIMPORTANT: The user is currently not logged in (browsing as guest). Prepend a brief, welcoming note encouraging them to register or log in to track their study plans, mock exams, and build a persistent counselor relationship. Keep this note warm and brief." : ""}
+
+=== INSTRUCTIONS ===
+1. Tailor all advice to their target career, exams, and weak areas.
+2. Provide actionable recommendations (e.g. customized study hours, learning roadmaps, specific colleges, and prep strategies).
+3. If critical profile fields are missing, weave in follow-up questions naturally.
+4. Keep answers clean, structured with headings, and concise.
+
+=== PROFILE SYNCHRONIZATION ===
+If the user shares new details about their class, stream, targets, skills, interests, strengths, weaknesses, preferred language, or education in their message, you MUST output a JSON block wrapped in <profile_update> and </profile_update> tags at the very end of your response, listing the updated fields.
+Only list fields that were newly mentioned or updated.
+Format example:
+<profile_update>
+{
+  "stream": "Science",
+  "interests": "coding, astrophysics",
+  "strengths": "mathematics",
+  "weaknesses": "inorganic chemistry",
+  "preferredLanguage": "English",
+  "currentClass": "Class 12"
+}
+</profile_update>
+Do not include empty fields or fields that did not change.`;
+
     const cleanUserMessage = lastUserMessage.toLowerCase();
 
-    // System prompt definition
-    const systemPrompt = "You are a professional, empathetic, and highly knowledgeable AI Career Counselor named PathFinder. Your goal is to guide students and professionals through their career journeys, provide tailored advice based on their interests, suggest actionable next steps, and help with resumes or interview preparation. You are part of the 'CareerVerse AI' ecosystem. Keep responses concise, engaging, and structured.";
-
-    // Try calling OpenRouter
+    // Call OpenRouter
     const apiKey = process.env.OPENROUTER_API_KEY;
     if (apiKey && apiKey !== '<your-openrouter-key>' && !apiKey.startsWith('<')) {
       try {
@@ -38,145 +250,141 @@ export async function POST(request: Request) {
             model: "google/gemini-2.5-flash:free",
             messages: formattedMessages
           }),
-          signal: AbortSignal.timeout(8000) // 8 second timeout to fail fast
+          signal: AbortSignal.timeout(10000)
         });
 
         if (response.ok) {
           const data = await response.json();
-          const reply = data.choices?.[0]?.message?.content;
+          let reply = data.choices?.[0]?.message?.content || "";
+
           if (reply) {
-            return NextResponse.json({ reply });
+            let cleanReply = reply;
+
+            // Extract profile updates if present
+            const tagStart = reply.indexOf("<profile_update>");
+            const tagEnd = reply.indexOf("</profile_update>");
+
+            if (tagStart !== -1 && tagEnd !== -1 && tagEnd > tagStart) {
+              const jsonStr = reply.substring(tagStart + 16, tagEnd).trim();
+              cleanReply = (reply.substring(0, tagStart) + reply.substring(tagEnd + 17)).trim();
+
+              try {
+                const cleanedJson = cleanJsonString(jsonStr);
+                const updates = JSON.parse(cleanedJson);
+
+                if (updates && typeof updates === 'object' && Object.keys(updates).length > 0 && !isGuest && user) {
+                  const allowedFields = [
+                    "currentClass", "stream", "targetExams", "targetCareers",
+                    "skills", "learningStyle", "interests", "strengths",
+                    "weaknesses", "preferredLanguage", "educationHistory"
+                  ];
+                  const updateData: any = {};
+                  for (const f of allowedFields) {
+                    if (updates[f] !== undefined) {
+                      updateData[f] = updates[f];
+                    }
+                  }
+
+                  if (Object.keys(updateData).length > 0) {
+                    await prisma.studentProfile.update({
+                      where: { userId: user.id },
+                      data: updateData
+                    });
+                  }
+                }
+              } catch (parseError) {
+                console.error("Failed to parse profile updates:", parseError, jsonStr);
+              }
+            }
+
+            // Save AI reply to the database if logged in
+            if (!isGuest && user) {
+              await prisma.chatMessage.create({
+                data: {
+                  userId: user.id,
+                  role: 'ai',
+                  content: cleanReply
+                }
+              });
+            }
+
+            return NextResponse.json({ reply: cleanReply });
           }
-        } else {
-          console.warn("OpenRouter API returned non-OK status:", response.status);
         }
       } catch (apiError) {
-        console.error("OpenRouter fetch failed, switching to dynamic counselor engine:", apiError);
+        console.error("OpenRouter API error, falling back to dynamic rule engine:", apiError);
       }
     }
 
-    // Dynamic Rule-Based AI Fallback Counselor Engine
+    // Dynamic Rule-Based AI Fallback Counselor Engine (Personalized)
     let reply = "";
+    const namePart = user ? ` ${user.name.split(" ")[0]}` : "";
+    const activeStream = profile?.stream || "your study area";
+    const activeExam = profile?.targetExams || "exams";
+    const activeCareers = profile?.targetCareers || "careers";
 
     if (cleanUserMessage.includes("hello") || cleanUserMessage.includes("hi ") || cleanUserMessage.trim() === "hi") {
-      reply = "Hello! I am your AI Career Counselor PathFinder. I'm here to help you navigate your academic and professional path. To get started, tell me: Are you a school student (which class?), a college student, or a working professional? What subjects or fields interest you most?";
+      reply = `Hello${namePart}! I am your AI Career Counselor PathFinder. ${isGuest ? "(Please Log In or Sign Up to sync your dashboard and track progress!)\n\n" : ""}Based on your profile, you are currently focused on the **${activeStream}** stream, targeting **${activeCareers}** and preparing for **${activeExam}**.
+
+What would you like to discuss today? We can design a study roadmap, check top colleges, or explore preparation strategies!`;
     } else if (cleanUserMessage.includes("computer") || cleanUserMessage.includes("code") || cleanUserMessage.includes("program") || cleanUserMessage.includes("coding") || cleanUserMessage.includes("software") || cleanUserMessage.includes("developer") || cleanUserMessage.includes("cs")) {
-      reply = `Software engineering and tech are excellent, high-growth fields! Here is a structured guidance sheet for you:
-
+      reply = `Software and tech are high-growth pathways tailored for you, ${user?.name || "Student"}! 
+      
 ### 🌟 Recommended Careers
-1. **Software Developer:** Build web, mobile, and system apps.
-2. **AI/ML Engineer:** Train neural networks and build predictive models.
-3. **Data Scientist:** Analyze data for business forecasting.
-4. **Cyber Security Analyst:** Safeguard networks against hacks.
+1. **Software Developer:** Build web/mobile apps.
+2. **AI/ML Engineer:** Build models (excellent since you are focused on ${activeStream}).
+3. **Data Scientist:** Analytics and business growth.
 
 ### 🏫 Top Institutions
-- **IITs (Bombay, Delhi, Madras)** - admission via JEE Advanced.
-- **IIIT Hyderabad / Bangalore** - famous for coding curriculum.
-- **BITS Pilani / NIT Trichy** - outstanding placements and student communities.
+- **IITs** (JEE Advanced), **IIIT Hyderabad**, and **BITS Pilani**.
 
-### 📝 Actionable Next Steps
-1. **Learn a Language:** Master Python (for AI/Data Science) or C++/Java (for core DSA).
-2. **DSA Foundations:** Practice Data Structures & Algorithms on platforms like LeetCode.
-3. **Build Projects:** Create a GitHub profile and host 2-3 personal full-stack projects.
-4. **Entrance Prep:** If in school, focus heavily on Math & Physics for JEE. If in college, prepare for GATE or study system design.`;
+### 📝 Personalized Next Steps
+1. **Develop Skills:** Learn Python/Java. Your profile lists skills: ${profile?.skills || "none added yet"}.
+2. **Mock practice:** You average ${(user?.mockTests?.length ?? 0) > 0 ? "mock performance analytics" : "no mock attempts yet"}. Focus on mock test speed.
+3. **Project Portfolio:** Host 2-3 full stack repositories on GitHub.`;
     } else if (cleanUserMessage.includes("medical") || cleanUserMessage.includes("doctor") || cleanUserMessage.includes("mbbs") || cleanUserMessage.includes("neet") || cleanUserMessage.includes("biology") || cleanUserMessage.includes("biotech")) {
-      reply = `Healthcare is a noble and highly stable profession. Here are your pathways:
+      reply = `Medicine & Healthcare offer high impact. Here are your pathways:
 
-### 🌟 Recommended Careers
-1. **Clinical Practitioner (Doctor - MBBS):** General medicine, surgery, pediatrics.
-2. **Biotechnologist:** Work in genomics, drug development, or agricultural research.
-3. **Pharmacist:** Manage pharmaceutical operations or research.
+### 🌟 Pathways
+1. **Clinical Doctor (MBBS):** Clear NEET-UG.
+2. **Biotech Researcher:** Great if you prefer research over clinical fields.
 
-### 🏫 Top Institutions
-- **AIIMS New Delhi** - The gold standard of medical education.
-- **JIPMER Puducherry** - Elite facilities and clinical exposure.
-- **Maulana Azad Medical College (Delhi)** - Highly competitive state setup.
+### 🏫 Top Colleges
+- **AIIMS New Delhi**, **JIPMER Puducherry**, and **MAMC Delhi**.
 
-### 📝 Actionable Next Steps
-1. **Master NCERT:** Focus 100% on class 11 and 12 NCERT Biology, Chemistry, and Physics.
-2. **Crack NEET-UG:** Practice previous year NEET papers and maintain an 'error notebook' for mock tests.
-3. **Explore Specializations:** Research MD/MS fields (Cardiology, Pediatrics, General Surgery) to align your long-term interest.`;
-    } else if (cleanUserMessage.includes("civil") || cleanUserMessage.includes("upsc") || cleanUserMessage.includes("ias") || cleanUserMessage.includes("ips") || cleanUserMessage.includes("government") || cleanUserMessage.includes("govt") || cleanUserMessage.includes("ssc")) {
-      reply = `Civil Services and Government administration offer unparalleled social impact, authority, and job security in India.
+### 📝 Recommendations
+1. **Focus Biology:** Re-review NCERT textbooks.
+2. **Address Weak Areas:** Pay attention to mock weak areas: ${(user?.mockTests || []).map(m => m.weakAreas).filter(Boolean).join(", ") || "Chemistry, Physics"}.`;
+    } else if (cleanUserMessage.includes("civil") || cleanUserMessage.includes("upsc") || cleanUserMessage.includes("ias") || cleanUserMessage.includes("ips") || cleanUserMessage.includes("government") || cleanUserMessage.includes("govt")) {
+      reply = `Civil Services offer unparalleled administrative scope.
 
-### 🌟 Key Pathways
-1. **UPSC Civil Services:** Gateway to IAS (Administrative), IPS (Police), IFS (Foreign), and central services.
-2. **State PSC Exams:** Entry to state-level administrative roles (SDM, DSP).
-3. **SSC CGL:** Recruits inspectors and officers in central ministries.
+### 🌟 Pathways
+1. **UPSC Civil Services:** Gateway to IAS/IPS/IFS.
+2. **State PSC Exams:** For state administration.
 
-### 📝 Actionable Next Steps
-1. **Daily Newspaper Reading:** Read *The Hindu* or *The Indian Express* editorials to build opinion and current affairs base.
-2. **Understand the Syllabus:** Memorize the UPSC syllabus structure (Prelims GS/CSAT, Mains 9 papers).
-3. **Choose Optional wisely:** Pick a graduation subject or one you enjoy for the two Optional Papers (500 marks).
-4. **Answer Writing:** Practice writing logical, balanced answers in 150-250 words daily.`;
-    } else if (cleanUserMessage.includes("law") || cleanUserMessage.includes("lawyer") || cleanUserMessage.includes("clat") || cleanUserMessage.includes("legal")) {
-      reply = `A career in Law is intellectually stimulating and highly diverse, ranging from court litigation to corporate boards.
-
-### 🌟 Recommended Sectors
-1. **Corporate Lawyer:** Manage mergers, contracts, and IP compliance for firms.
-2. **Litigating Advocate:** Practice criminal, civil, or constitutional law in courts.
-3. **Judicial Services:** Clear state exams to become a Judge.
-
-### 🏫 Top Institutions
-- **NLSIU Bangalore** - The top National Law School in India.
-- **NALSAR Hyderabad & NUJS Kolkata** - Elite corporate law placements.
-
-### 📝 Actionable Next Steps
-1. **Prepare for CLAT:** Focus on English comprehension, logical reasoning, and legal reasoning.
-2. **Develop Critical Thinking:** Read analytical editorials and practice debating.
-3. **Earn a Degree:** Pursue a 5-year integrated BA LLB or BBA LLB from a top law university.`;
-    } else if (cleanUserMessage.includes("business") || cleanUserMessage.includes("mba") || cleanUserMessage.includes("manage") || cleanUserMessage.includes("management") || cleanUserMessage.includes("consult")) {
-      reply = `Management and consulting are fast-paced, high-reward corporate careers.
-
-### 🌟 Recommended Careers
-1. **Management Consultant:** Solve complex strategic problems for Fortune 500 firms.
-2. **Product Manager:** Lead cross-functional tech teams to launch products.
-3. **Investment Banker:** Manage mergers, valuations, and corporate fundraising.
-
-### 🏫 Top Institutions
-- **IIM Ahmedabad, Bangalore, Calcutta** - Elite triple-crown business schools.
-- **ISB Hyderabad / XLRI Jamshedpur** - Famous for post-grad consulting roles.
-
-### 📝 Actionable Next Steps
-1. **Prepare for CAT/GMAT:** Focus on Quantitative Aptitude, DILR puzzles, and English comprehension (VARC).
-2. **Academic Consistency:** Maintain high grades in 10th, 12th, and college, as B-schools evaluate past academic scores.
-3. **Build Leadership Profile:** Engage in college societies, take responsibilities, and secure internships.`;
-    } else if (cleanUserMessage.includes("design") || cleanUserMessage.includes("creative") || cleanUserMessage.includes("ux") || cleanUserMessage.includes("ui") || cleanUserMessage.includes("artist") || cleanUserMessage.includes("art")) {
-      reply = `Design is a highly creative, user-centric career path that merges psychology, visual art, and tech.
-
-### 🌟 Recommended Careers
-1. **UI/UX Designer:** Craft user interfaces and mobile app screen flows.
-2. **Product Designer:** Design physical objects and consumer devices.
-3. **Communication/Graphic Designer:** Brand logo assets, advertising layouts, and animations.
-
-### 🏫 Top Institutions
-- **NID Ahmedabad** - Premier design institute.
-- **IDC School of Design (IIT Bombay) / NIFT Delhi** - Elite placements and labs.
-
-### 📝 Actionable Next Steps
-1. **Master Design Tools:** Learn Figma (for UI/UX) or Adobe Photoshop/Illustrator.
-2. **Build a Portfolio:** Host your case studies and visual mockups on Behance or Dribbble.
-3. **Entrance Prep:** If aiming for B.Des, prepare for NID DAT or UCEED exams (visual thinking & spatial questions).`;
-    } else if (cleanUserMessage.includes("commerce") || cleanUserMessage.includes("ca ") || cleanUserMessage.includes("chartered") || cleanUserMessage.includes("finance") || cleanUserMessage.includes("banking") || cleanUserMessage.includes("cs ")) {
-      reply = `Commerce, finance, and accounting form the core backbone of corporate business operations.
-
-### 🌟 Recommended Careers
-1. **Chartered Accountant (CA):** Handle taxation audits and corporate accounting sheets.
-2. **Financial Analyst:** Study market trends and guide company portfolio investments.
-3. **Company Secretary (CS):** Advise corporate boards on regulatory compliance.
-
-### 📝 Actionable Next Steps
-1. **CA Registration:** If interested in CA, register with ICAI after class 12 and clear CA Foundation.
-2. **Develop Analytical Skills:** Build proficiency in MS Excel, financial modeling, and macroeconomics.
-3. **Academic Degrees:** Pursue B.Com or BBA from a reputable college while studying for CFA (Finance) or CA certification.`;
+### 📝 Action Plan
+1. **Newspaper Analysis:** Daily editorials in *The Hindu*.
+2. **Syllabus Roadmap:** Check your study plan: ${(user?.studyPlans?.length ?? 0) > 0 ? "You have a planner configured" : "Create a study plan in the planner to organize GS papers"}.
+3. **Answer Writing:** Practice descriptive GS questions daily.`;
     } else {
-      reply = `That sounds like an interesting direction! To help me give you the most detailed, tailored advice, could you share a bit more?
+      reply = `That sounds like a great direction! To help me tailor a detailed roadmap, could you share a bit more?
       
-1. **What stream or subjects** do you enjoy studying most (e.g., Mathematics, Biology, Economics, Humanities, Design)?
-2. **What is your target career goal** (e.g., tech industry, medical, government services, creative design, corporate finance)?
-3. **Are you preparing for any entrance exams** (like JEE, NEET, CLAT, UPSC, CAT)?
-      
-Once you share these details, I will construct a personalized, step-by-step roadmap for you!`;
+1. **What stream or subjects** do you enjoy studying most (e.g. Science, Commerce, Arts)?
+2. **What is your target career** (e.g. technology, medicine, administration, business)?
+3. **Are you preparing for any exams** (like JEE, NEET, UPSC, CLAT)?
+
+Once you tell me, I'll compile a customized roadmap for you!`;
+    }
+
+    // Save fallback response to database if authenticated
+    if (!isGuest && user) {
+      await prisma.chatMessage.create({
+        data: {
+          userId: user.id,
+          role: 'ai',
+          content: reply
+        }
+      });
     }
 
     return NextResponse.json({ reply });

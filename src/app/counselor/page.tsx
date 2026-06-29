@@ -21,6 +21,23 @@ export default function CounselorChat() {
   };
 
   useEffect(() => {
+    const fetchChatHistory = async () => {
+      try {
+        const res = await fetch("/api/chat");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.messages && data.messages.length > 0) {
+            setMessages(data.messages);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load chat history:", error);
+      }
+    };
+    fetchChatHistory();
+  }, []);
+
+  useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
