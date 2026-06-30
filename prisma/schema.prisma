@@ -12,10 +12,17 @@ model User {
   id            String    @id @default(uuid())
   name          String
   email         String    @unique
-  password      String
+  password      String?
   role          String    @default("STUDENT") // STUDENT, PARENT, MENTOR, ADMIN
   eduCoins      Int       @default(0)
   level         Int       @default(1)
+  
+  // Auth Fields
+  isEmailVerified        Boolean   @default(false)
+  emailVerificationToken String?   @unique
+  passwordResetToken     String?   @unique
+  resetTokenExpiry       DateTime?
+  googleId               String?   @unique
   
   // Relations
   profile       StudentProfile?

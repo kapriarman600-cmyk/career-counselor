@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { cookies } from 'next/headers';
+import bcrypt from 'bcrypt';
 
 export async function POST(request: Request) {
   try {
@@ -21,9 +22,34 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
-    // Verify password (plain text check for simplicity / compatibility with seeded test accounts)
-    if (user.password !== password) {
+    // Verify password
+    if (!user.password) {
+      return NextResponse.json({ error: 'Please login using Google' }, { status: 401 });
+    }
+
+    let passwordMatch = false;
+    
+    // Fallback for unhashed passwords (for testing purposes, old accounts)
+    if (!user.password.startsWith('$2b$') && !user.password.startsWith('$2a$')) {
+      passwordMatch = user.password === password;
+      if (passwordMatch) {
+         // Auto hash their password on first successful login
+         await prisma.user.update({
+           where: { id: user.id },
+           data: { password: await bcrypt.hash(password, 10) }
+         });
+      }
+    } else {
+      passwordMatch = await bcrypt.compare(password, user.password);
+    }
+
+    if (!passwordMatch) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+    }
+
+    // Check email verification
+    if (!user.isEmailVerified) {
+      return NextResponse.json({ error: 'Please verify your email before logging in.' }, { status: 403 });
     }
 
     // Set Session Cookie

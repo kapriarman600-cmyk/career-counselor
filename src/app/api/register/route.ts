@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { cookies } from 'next/headers';
+import bcrypt from 'bcrypt';
+import crypto from 'crypto';
+import { isPasswordValid } from '@/lib/auth-validation';
+import { sendVerificationEmail } from '@/lib/mailer';
 
 export async function POST(request: Request) {
   try {
@@ -14,14 +18,9 @@ export async function POST(request: Request) {
     if (!email || !email.trim() || !email.includes('@')) {
       return NextResponse.json({ error: 'A valid email is required' }, { status: 400 });
     }
-    if (!password || password.length < 8) {
-      return NextResponse.json({ error: 'Password must be at least 8 characters long' }, { status: 400 });
-    }
-
-    const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    if (!passwordRegex.test(password)) {
+    if (!password || !isPasswordValid(password)) {
       return NextResponse.json({ 
-        error: 'Password must include at least one letter, one number, and one special character.' 
+        error: 'Password must be at least 8 characters and include uppercase, lowercase, number, and special character.' 
       }, { status: 400 });
     }
 
@@ -44,16 +43,21 @@ export async function POST(request: Request) {
       );
     }
 
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+
     // Create User and Profile in a transaction
     const user = await prisma.$transaction(async (tx) => {
       const newUser = await tx.user.create({
         data: {
           name: name.trim(),
           email: cleanEmail,
-          password: password, // In a real production app, hash this using bcrypt
+          password: hashedPassword,
           role: cleanRole,
           eduCoins: 100, // Reward 100 coins for signing up!
-          level: 1
+          level: 1,
+          emailVerificationToken: verificationToken,
+          isEmailVerified: false,
         },
       });
 
@@ -96,18 +100,14 @@ export async function POST(request: Request) {
       return newUser;
     });
 
-    // Set Session Cookie
-    const cookieStore = await cookies();
-    cookieStore.set('session_user_id', user.id, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-      path: '/',
-    });
+    // Send verification email
+    await sendVerificationEmail(user.email, verificationToken);
 
+    // Note: We don't set the session cookie here anymore because they need to verify their email first.
+    
     return NextResponse.json(
       { 
-        message: 'Account created successfully', 
+        message: 'Account created successfully. Please check your email to verify your account.', 
         user: { id: user.id, email: user.email, name: user.name, role: user.role } 
       },
       { status: 201 }
