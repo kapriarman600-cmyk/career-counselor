@@ -100,8 +100,27 @@ export default function Register() {
 
   return (
     <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "YOUR_GOOGLE_CLIENT_ID"}>
-      <div style={{ padding: "4rem 2rem", display: "flex", justifyContent: "center" }}>
-        <div className="glass-panel" style={{ maxWidth: "450px", width: "100%" }}>
+      <div className="auth-container">
+        <div className="auth-left">
+          <div className="auth-left-content">
+            <h1 style={{ fontSize: "3.5rem", marginBottom: "1rem", lineHeight: 1.1, letterSpacing: "-0.02em" }}>Start Your Journey with<br/><span className="text-gradient">CareerVerse AI</span></h1>
+            <p style={{ fontSize: "1.1rem", color: "var(--text-secondary)", marginBottom: "2.5rem", maxWidth: "400px" }}>Create an account to discover top colleges, prepare for exams, and unlock your true potential.</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div style={{ padding: "1.2rem", background: "var(--bg-card)", borderRadius: "16px", border: "1px solid var(--border-light)", display: "flex", alignItems: "center", gap: "1rem" }}>
+                <div style={{ width: "40px", height: "40px", borderRadius: "10px", background: "rgba(16, 185, 129, 0.2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--success)" }}>
+                  <User size={20} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: "1rem", fontWeight: 600, color: "var(--text-primary)" }}>Personalized Path</h3>
+                  <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: "0.2rem" }}>Get AI-driven insights tailored just for you.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="auth-right">
+          <div className="auth-form-wrapper">
+            <div className="glass-panel">
           <div style={{ textAlign: "center", marginBottom: "2rem" }}>
             <h2 style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>Create Account</h2>
             <p style={{ color: "var(--text-secondary)" }}>Join PathFinder and start your journey</p>
@@ -263,6 +282,8 @@ export default function Register() {
             <Link href="/login" style={{ color: "var(--primary)", fontWeight: "600" }}>
               Log In
             </Link>
+          </div>
+            </div>
           </div>
         </div>
       </div>

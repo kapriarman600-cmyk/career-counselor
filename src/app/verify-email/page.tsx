@@ -41,8 +41,16 @@ function VerifyEmailContent() {
   }, [token]);
 
   return (
-    <div style={{ padding: "6rem 2rem", display: "flex", justifyContent: "center", minHeight: "calc(100vh - 80px)" }}>
-      <div className="glass-panel" style={{ maxWidth: "450px", width: "100%", height: "fit-content", textAlign: "center" }}>
+    <div className="auth-container">
+      <div className="auth-left">
+        <div className="auth-left-content">
+          <h1 style={{ fontSize: "3.5rem", marginBottom: "1rem", lineHeight: 1.1, letterSpacing: "-0.02em" }}>Account<br/><span className="text-gradient">Verification</span></h1>
+          <p style={{ fontSize: "1.1rem", color: "var(--text-secondary)", marginBottom: "2.5rem", maxWidth: "400px" }}>Confirm your identity to unlock all premium features of CareerVerse AI.</p>
+        </div>
+      </div>
+      <div className="auth-right">
+        <div className="auth-form-wrapper">
+          <div className="glass-panel" style={{ textAlign: "center" }}>
         
         <div style={{ marginBottom: "2rem" }}>
           {status === "loading" && (
@@ -67,6 +75,8 @@ function VerifyEmailContent() {
             Return to Sign Up
           </Link>
         ) : null}
+          </div>
+        </div>
       </div>
       <style dangerouslySetInnerHTML={{__html: `
         @keyframes spin { 100% { transform: rotate(360deg); } }

@@ -38,8 +38,16 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div style={{ padding: "6rem 2rem", display: "flex", justifyContent: "center", minHeight: "calc(100vh - 80px)" }}>
-      <div className="glass-panel" style={{ maxWidth: "450px", width: "100%", height: "fit-content" }}>
+    <div className="auth-container">
+      <div className="auth-left">
+        <div className="auth-left-content">
+          <h1 style={{ fontSize: "3.5rem", marginBottom: "1rem", lineHeight: 1.1, letterSpacing: "-0.02em" }}>Secure Account<br/><span className="text-gradient">Recovery</span></h1>
+          <p style={{ fontSize: "1.1rem", color: "var(--text-secondary)", marginBottom: "2.5rem", maxWidth: "400px" }}>Regain access to your CareerVerse AI account quickly and securely.</p>
+        </div>
+      </div>
+      <div className="auth-right">
+        <div className="auth-form-wrapper">
+          <div className="glass-panel">
         
         <div style={{ marginBottom: "1.5rem" }}>
           <Link href="/login" style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", fontSize: "0.9rem", color: "var(--text-secondary)" }}>
@@ -88,6 +96,8 @@ export default function ForgotPassword() {
           </form>
         )}
 
+          </div>
+        </div>
       </div>
     </div>
   );
